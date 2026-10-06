@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, ArrowDown, FlaskConical, Globe2, Rocket, Beaker, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import MicrogravitySimulation from "@/components/MicrogravitySimulation";
 
 const smoothEase = [0.22, 1, 0.36, 1] as const;
 
@@ -281,6 +282,8 @@ export default function Home() {
           className="divider-sketch w-full origin-left"
         />
       </div>
+
+      <MicrogravitySimulation />
 
       {/* 3. RESEARCH LIBRARY */}
       <section id="research-shelf" className="px-4 md:px-6 py-12 md:py-16 max-w-4xl mx-auto w-full relative z-10">
