@@ -298,50 +298,103 @@ export default function Home() {
         </motion.div>
 
         <div className="grid grid-cols-1 gap-6 md:gap-8">
-          <Link href="/article/1" className="block group w-full outline-none">
-            <motion.div 
-              whileHover={{ y: -4, scale: 1.005 }}
-              whileTap={{ scale: 0.98, y: 0 }}
-              transition={{ duration: 0.3, ease: smoothEase }}
-              className="border-hand p-5 md:p-8 bg-paper/60 hover:bg-white/90 hover:border-graphite/40 transition-colors duration-300 relative overflow-hidden h-full flex flex-col min-h-[220px]"
-            >
+          {[
+            {
+              id: "01",
+              url: "/article/1",
+              date: "1986 - Present",
+              category: "Radiation Ecology",
+              title: "Radioactive Caesium from Chernobyl in Fungi",
+              authors: "Gerard T. Oolbekkink & Thomas W. Kuyper",
+              summary: "A study discussing the accumulation of radioactive caesium in fungi and ecosystems following radioactive fallout.",
+              external: false
+            },
+            {
+              id: "02",
+              url: "https://share.google/yEr1VaLxIg1k0OExN",
+              date: "2024",
+              category: "Mycology / Resource Extraction",
+              title: "Mycomining: perspective on fungi as scavengers of scattered metal, mineral, and rare earth element resources",
+              authors: "Mitchell P. Jones & Alexander Bismarck",
+              summary: "A perspective on using fungi for the extraction and scavenging of scattered metals, minerals, and rare earth elements from various resources.",
+              external: true
+            },
+            {
+              id: "03",
+              url: "https://share.google/jl6wQlRHHEDsKOcdF",
+              date: "2025",
+              category: "Space Microbiology",
+              title: "Impacts of microgravity on the survival and growth kinetics of Salmonella on seeds and in plant nutrient solution",
+              authors: "Zhen Jia, Emma G. Holliday, Yaguang Luo & Boce Zhang",
+              summary: "Research on how microgravity conditions affect the survival, growth, and behavior of Salmonella when grown on seeds and in plant nutrient solutions.",
+              external: true
+            },
+            {
+              id: "04",
+              url: "https://share.google/tkb5cIsPkUMhMULS3",
+              date: "2026",
+              category: "Oncology / Biohybrid Therapeutics",
+              title: "Biohybrid Salmonella typhimurium for synergistic chemoimmunotherapy via localized chemotherapy and in situ PD-L1 blockade",
+              authors: "Longxue Guan et al.",
+              summary: "Exploring the use of biohybrid Salmonella typhimurium to deliver localized chemotherapy combined with PD-L1 blockade for cancer treatment.",
+              external: true
+            },
+            {
+              id: "05",
+              url: "https://share.google/SwsIzhksUQAjPim0t",
+              date: "2026",
+              category: "Radiochemistry / PET Imaging",
+              title: "Design semi-automated radio-synthesis strategy and synthesis of benzimidazole-based radiotracer 2-(4-(2-(fluoro-18F) ethyl) piperidin-1-yl) benzo imidazo[1,2-a] pyrimidine for Tau as a PET imaging agent",
+              authors: "Akhilesh Kumar Singh et al.",
+              summary: "A study detailing a semi-automated radio-synthesis strategy for a novel benzimidazole-based radiotracer targeting Tau for PET imaging applications.",
+              external: true
+            }
+          ].map((item, idx) => (
+            <Link key={idx} href={item.url} target={item.external ? "_blank" : undefined} rel={item.external ? "noopener noreferrer" : undefined} className="block group w-full outline-none">
               <motion.div 
-                className="absolute top-4 right-4 md:top-0 md:right-0 md:p-8 text-muted-grey/10 transition-colors duration-300 pointer-events-none"
-                initial={{ rotate: 0 }}
-                whileHover={{ rotate: 5, scale: 1.1, color: "rgba(109, 139, 166, 0.15)" }}
-                transition={{ duration: 0.4, ease: smoothEase }}
+                whileHover={{ y: -4, scale: 1.005 }}
+                whileTap={{ scale: 0.98, y: 0 }}
+                transition={{ duration: 0.3, ease: smoothEase }}
+                className="border-hand p-5 md:p-8 bg-paper/60 hover:bg-white/90 hover:border-graphite/40 transition-colors duration-300 relative overflow-hidden h-full flex flex-col min-h-[220px]"
               >
-                <Beaker className="w-20 h-20 md:w-32 md:h-32" strokeWidth={0.5} />
-              </motion.div>
-              
-              <div className="flex justify-between items-start mb-4 md:mb-6 relative z-10">
-                <span className="font-sans text-[10px] md:text-xs font-bold tracking-widest border-b border-graphite/20 pb-1">FIELD NOTE 01</span>
-                <span className="font-hand text-base md:text-lg text-muted-grey">1986 - Present</span>
-              </div>
-              
-              <div className="relative z-10 flex flex-col flex-grow">
-                <p className="font-sans text-[10px] md:text-xs tracking-widest uppercase text-accent-green mb-1 md:mb-2">Radiation Ecology</p>
-                <h3 className="text-xl md:text-3xl font-serif mb-2 md:mb-4 group-hover:text-accent-blue transition-colors duration-300 pr-10 md:pr-0 leading-snug">
-                  Radioactive Caesium from Chernobyl in Fungi
-                </h3>
-                <p className="font-sans text-xs md:text-sm text-charcoal mb-3 md:mb-4">Gerard T. Oolbekkink & Thomas W. Kuyper</p>
-                <p className="font-serif text-sm md:text-base text-charcoal/80 mb-6 md:mb-8 line-clamp-3 md:line-clamp-2 leading-relaxed">
-                  A study discussing the accumulation of radioactive caesium in fungi and ecosystems following radioactive fallout.
-                </p>
+                <motion.div 
+                  className="absolute top-4 right-4 md:top-0 md:right-0 md:p-8 text-muted-grey/10 transition-colors duration-300 pointer-events-none"
+                  initial={{ rotate: 0 }}
+                  whileHover={{ rotate: 5, scale: 1.1, color: "rgba(109, 139, 166, 0.15)" }}
+                  transition={{ duration: 0.4, ease: smoothEase }}
+                >
+                  <Beaker className="w-20 h-20 md:w-32 md:h-32" strokeWidth={0.5} />
+                </motion.div>
                 
-                <div className="mt-auto inline-flex items-center gap-2 font-sans text-[10px] md:text-xs font-bold tracking-widest uppercase group-hover:text-accent-blue py-2 transition-colors duration-300 w-fit">
-                  Read Article 
-                  <motion.div
-                    initial={{ x: 0 }}
-                    whileHover={{ x: 4 }}
-                    transition={{ duration: 0.3, ease: smoothEase }}
-                  >
-                    <ChevronRight size={14} className="md:w-4 md:h-4" />
-                  </motion.div>
+                <div className="flex justify-between items-start mb-4 md:mb-6 relative z-10">
+                  <span className="font-sans text-[10px] md:text-xs font-bold tracking-widest border-b border-graphite/20 pb-1">FIELD NOTE {item.id}</span>
+                  <span className="font-hand text-base md:text-lg text-muted-grey">{item.date}</span>
                 </div>
-              </div>
-            </motion.div>
-          </Link>
+                
+                <div className="relative z-10 flex flex-col flex-grow">
+                  <p className="font-sans text-[10px] md:text-xs tracking-widest uppercase text-accent-green mb-1 md:mb-2">{item.category}</p>
+                  <h3 className="text-xl md:text-3xl font-serif mb-2 md:mb-4 group-hover:text-accent-blue transition-colors duration-300 pr-10 md:pr-0 leading-snug">
+                    {item.title}
+                  </h3>
+                  <p className="font-sans text-xs md:text-sm text-charcoal mb-3 md:mb-4">{item.authors}</p>
+                  <p className="font-serif text-sm md:text-base text-charcoal/80 mb-6 md:mb-8 line-clamp-3 md:line-clamp-2 leading-relaxed">
+                    {item.summary}
+                  </p>
+                  
+                  <div className="mt-auto inline-flex items-center gap-2 font-sans text-[10px] md:text-xs font-bold tracking-widest uppercase group-hover:text-accent-blue py-2 transition-colors duration-300 w-fit">
+                    Read Article 
+                    <motion.div
+                      initial={{ x: 0 }}
+                      whileHover={{ x: 4 }}
+                      transition={{ duration: 0.3, ease: smoothEase }}
+                    >
+                      <ChevronRight size={14} className="md:w-4 md:h-4" />
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.div>
+            </Link>
+          ))}
         </div>
       </section>
 
