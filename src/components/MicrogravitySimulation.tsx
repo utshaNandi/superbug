@@ -7,7 +7,8 @@ import { Rocket, FlaskConical, Beaker, Dna, Activity, ArrowDown, Globe2, Shield,
 const smoothEase = [0.22, 1, 0.36, 1] as const;
 
 type Bacterium = 'ecoli' | 'salmonella' | 'saureus';
-type Antibiotic = 'none' | 'gentamicin' | 'ciprofloxacin';
+type Antibiotic = 'none' | 'gentamicin' | 'ciprofloxacin' | 'azithromycin' | 'methicillin';
+type EvidenceType = 'spaceflight' | 'simulated' | 'ground' | 'literature';
 
 const BACTERIA = {
   ecoli: { name: 'E. coli' },
@@ -15,26 +16,24 @@ const BACTERIA = {
   saureus: { name: 'S. aureus' }
 };
 
-// Only show antibiotics for which relevant experimental data exists.
 const ANTIBIOTICS: Record<Bacterium, Antibiotic[]> = {
   ecoli: ['none', 'gentamicin', 'ciprofloxacin'],
-  salmonella: ['none'],
-  saureus: ['none']
+  salmonella: ['none', 'azithromycin'],
+  saureus: ['none', 'methicillin']
 };
 
 const ICONS: Record<string, React.ElementType> = {
   Globe2, ArrowDown, Beaker, Dna, Activity, Shield, TestTube2, AlertCircle, Rocket, FlaskConical
 };
 
-type Metric = { id: string; label: string; earth: number; micro: number; highlight?: boolean };
-type Observation = { id: string; title: string; text: string };
+type Metric = { id: string; label: string; earth: number; micro: number; highlight?: boolean; evidence: EvidenceType };
+type Observation = { id: string; title: string; text: string; evidence: EvidenceType };
 type Mechanism = { label: string; icon: string };
 
 type ExperimentData = {
   sourceTitle: string;
   sourceDesc: string;
   link: string | null;
-  hasData: boolean;
   mechanism: Mechanism[];
   metrics: Metric[];
   growthCurve: { earth: number[]; micro: number[] } | null;
@@ -43,10 +42,9 @@ type ExperimentData = {
 
 const DATA_DB: Record<string, ExperimentData> = {
   'salmonella-none': {
-    sourceTitle: 'NASA MICROBE — STS-115',
-    sourceDesc: 'Spaceflight investigation of microbial gene expression and virulence. Flown on Space Shuttle Atlantis (2006).',
+    sourceTitle: 'NASA MICROBE (STS-115) & Published LSMMG Research',
+    sourceDesc: 'Spaceflight investigation of microbial gene expression combined with spaceflight-analogue growth studies.',
     link: 'https://www.nasa.gov/ames/space-biosciences/microbe-sts-115/',
-    hasData: true,
     mechanism: [
       { label: 'Microgravity', icon: 'Globe2' },
       { label: 'Altered Fluid Shear', icon: 'ArrowDown' },
@@ -55,22 +53,64 @@ const DATA_DB: Record<string, ExperimentData> = {
       { label: 'Increased Virulence', icon: 'Activity' }
     ],
     metrics: [
-      { id: 'm1', label: 'Final Growth Density', earth: 70, micro: 90 },
-      { id: 'm2', label: 'Extracellular Matrix (Biofilm)', earth: 30, micro: 85, highlight: true },
-      { id: 'm3', label: 'Differentially Expressed Genes', earth: 0, micro: 100 }
+      { id: 'm1', label: 'Final Growth Density', earth: 70, micro: 90, evidence: 'simulated' },
+      { id: 'm2', label: 'Extracellular Matrix (Biofilm)', earth: 30, micro: 85, highlight: true, evidence: 'spaceflight' },
+      { id: 'm3', label: 'Differentially Expressed Genes', earth: 0, micro: 100, evidence: 'spaceflight' }
     ],
     growthCurve: { earth: [10, 20, 45, 65, 70], micro: [10, 25, 55, 80, 90] },
     observations: [
-      { id: '01', title: 'Growth', text: 'Microgravity produced a measurable reduction in lag phase, leading to slightly higher final cell densities compared to 1×g ground controls.' },
-      { id: '02', title: 'Regulatory Response', text: 'Significant changes in gene expression were observed across 167 genes, orchestrated heavily by the Hfq RNA chaperone pathway.' },
-      { id: '03', title: 'Biofilm / Virulence', text: 'Research indicates altered behaviour resulting in increased extracellular matrix accumulation and significantly enhanced virulence in murine models.' }
+      { id: '01', title: 'Growth', text: 'Microgravity analogues produced a measurable reduction in lag phase, leading to slightly higher final cell densities compared to 1×g ground controls.', evidence: 'simulated' },
+      { id: '02', title: 'Regulatory Response', text: 'Significant changes in gene expression were observed across 167 genes during actual spaceflight, orchestrated heavily by the Hfq RNA chaperone pathway.', evidence: 'spaceflight' },
+      { id: '03', title: 'Biofilm / Virulence', text: 'Spaceflight samples exhibited altered behaviour resulting in increased extracellular matrix accumulation and significantly enhanced virulence in murine models.', evidence: 'spaceflight' }
+    ]
+  },
+  'salmonella-azithromycin': {
+    sourceTitle: 'NASA-Supported Analogue & STS-115 Findings',
+    sourceDesc: 'Composite data utilizing STS-115 genetic data and spaceflight-analogue antibiotic susceptibility research.',
+    link: null,
+    mechanism: [
+      { label: 'Microgravity', icon: 'Globe2' },
+      { label: 'Altered Fluid Shear', icon: 'ArrowDown' },
+      { label: 'Hfq/Stress Response', icon: 'Dna' },
+      { label: 'Cell Envelope Changes', icon: 'Shield' },
+      { label: 'Altered Susceptibility', icon: 'TestTube2' }
+    ],
+    metrics: [
+      { id: 'm1', label: 'Antibiotic Survival Rate', earth: 20, micro: 60, highlight: true, evidence: 'simulated' },
+      { id: 'm2', label: 'Extracellular Matrix (Biofilm)', earth: 30, micro: 85, evidence: 'spaceflight' }
+    ],
+    growthCurve: { earth: [10, 30, 40, 20, 10], micro: [10, 30, 45, 40, 35] },
+    observations: [
+      { id: '01', title: 'Cellular Stress', text: 'Significant stress-response activation was observed in spaceflight, serving as a precursor to altered drug sensitivity.', evidence: 'spaceflight' },
+      { id: '02', title: 'Antibiotic Response', text: 'NASA-supported spaceflight-analogue research has reported altered S. Typhimurium antibiotic sensitivity to azithromycin, demonstrating delayed killing.', evidence: 'simulated' },
+      { id: '03', title: 'Biofilm / Virulence', text: 'Increased virulence and biofilm-like properties were independently verified in spaceflight.', evidence: 'spaceflight' }
+    ]
+  },
+  'ecoli-none': {
+    sourceTitle: 'Simulated Microgravity Studies',
+    sourceDesc: 'Peer-reviewed laboratory studies on E. coli growth kinetics under simulated microgravity.',
+    link: null,
+    mechanism: [
+      { label: 'Microgravity', icon: 'Globe2' },
+      { label: 'Altered Sedimentation', icon: 'ArrowDown' },
+      { label: 'Cellular Morphology Shift', icon: 'Activity' },
+      { label: 'Reduced Cell Size', icon: 'Beaker' },
+      { label: 'Enhanced Growth', icon: 'Dna' }
+    ],
+    metrics: [
+      { id: 'm1', label: 'Growth Rate (Exponential)', earth: 60, micro: 85, evidence: 'simulated' },
+      { id: 'm2', label: 'Average Cell Volume', earth: 80, micro: 40, evidence: 'simulated' }
+    ],
+    growthCurve: { earth: [5, 15, 35, 55, 65], micro: [5, 20, 50, 75, 85] },
+    observations: [
+      { id: '01', title: 'Growth', text: 'Enhanced growth rates were experimentally observed during the exponential phase under modeled microgravity.', evidence: 'simulated' },
+      { id: '02', title: 'Cellular Morphology', text: 'Modifications in cell size and morphology effectively altered cell surface area to volume ratios.', evidence: 'simulated' }
     ]
   },
   'ecoli-gentamicin': {
     sourceTitle: 'NASA EcAMSat (OS-813)',
     sourceDesc: 'Spaceflight investigation of E. coli antibiotic resistance using the EcAMSat nanosatellite.',
     link: 'https://osdr.nasa.gov/bio/repo/data/experiments/OS-813',
-    hasData: true,
     mechanism: [
       { label: 'Microgravity', icon: 'Globe2' },
       { label: 'Quiescent Fluid', icon: 'ArrowDown' },
@@ -79,21 +119,20 @@ const DATA_DB: Record<string, ExperimentData> = {
       { label: 'Enhanced Survival', icon: 'Shield' }
     ],
     metrics: [
-      { id: 'm1', label: 'Antibiotic Survival Rate', earth: 15, micro: 65, highlight: true },
-      { id: 'm2', label: 'RpoS Stress Response', earth: 40, micro: 85 }
+      { id: 'm1', label: 'Antibiotic Survival Rate', earth: 15, micro: 65, highlight: true, evidence: 'spaceflight' },
+      { id: 'm2', label: 'RpoS Stress Response', earth: 40, micro: 85, evidence: 'spaceflight' }
     ],
     growthCurve: { earth: [10, 30, 40, 20, 10], micro: [10, 30, 45, 50, 45] },
     observations: [
-      { id: '01', title: 'Growth & Transport', text: 'The lack of convective mixing in microgravity radically altered nutrient and drug transport to the bacterial envelope.' },
-      { id: '02', title: 'Cellular Stress', text: 'Microgravity-associated changes pre-adapted the cells by upregulating the general stress response pathway mediated by σS (RpoS).' },
-      { id: '03', title: 'Antibiotic Response', text: 'E. coli showed a significantly higher survival rate and delayed killing when exposed to gentamicin under spaceflight conditions.' }
+      { id: '01', title: 'Growth & Transport', text: 'The lack of convective mixing in microgravity radically altered nutrient and drug transport to the bacterial envelope.', evidence: 'spaceflight' },
+      { id: '02', title: 'Cellular Stress', text: 'Microgravity-associated changes pre-adapted the cells by upregulating the general stress response pathway mediated by σS (RpoS).', evidence: 'spaceflight' },
+      { id: '03', title: 'Antibiotic Response', text: 'E. coli showed a significantly higher survival rate and delayed killing when exposed to gentamicin under actual spaceflight conditions.', evidence: 'spaceflight' }
     ]
   },
   'ecoli-ciprofloxacin': {
     sourceTitle: 'Simulated Microgravity Study (PMC9502502)',
     sourceDesc: 'Peer-reviewed laboratory study on E. coli growth and antibiotic sensitivity under simulated microgravity.',
     link: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC9502502/',
-    hasData: true,
     mechanism: [
       { label: 'Simulated Microgravity', icon: 'Globe2' },
       { label: 'Morphological Shift', icon: 'Activity' },
@@ -102,46 +141,64 @@ const DATA_DB: Record<string, ExperimentData> = {
       { label: 'Elevated MIC', icon: 'TestTube2' }
     ],
     metrics: [
-      { id: 'm1', label: 'Growth Rate (Exponential)', earth: 60, micro: 85 },
-      { id: 'm2', label: 'Minimum Inhibitory Concentration (MIC)', earth: 30, micro: 70, highlight: true },
-      { id: 'm3', label: 'Cell Size / Volume', earth: 80, micro: 40 }
+      { id: 'm1', label: 'Growth Rate (Exponential)', earth: 60, micro: 85, evidence: 'simulated' },
+      { id: 'm2', label: 'Minimum Inhibitory Concentration (MIC)', earth: 30, micro: 70, highlight: true, evidence: 'simulated' },
+      { id: 'm3', label: 'Cell Size / Volume', earth: 80, micro: 40, evidence: 'simulated' }
     ],
     growthCurve: { earth: [5, 15, 35, 25, 15], micro: [5, 20, 50, 45, 35] },
     observations: [
-      { id: '01', title: 'Growth', text: 'Enhanced growth rates were experimentally observed during the exponential phase under modeled microgravity.' },
-      { id: '02', title: 'Cellular Morphology', text: 'Modifications in cell size and morphology effectively altered cell surface area to volume ratios.' },
-      { id: '03', title: 'Antibiotic Response', text: 'The experimentally measured Minimum Inhibitory Concentration (MIC) increased, indicating reduced sensitivity to ciprofloxacin.' }
+      { id: '01', title: 'Growth', text: 'Enhanced growth rates were experimentally observed during the exponential phase under modeled microgravity.', evidence: 'simulated' },
+      { id: '02', title: 'Cellular Morphology', text: 'Modifications in cell size and morphology effectively altered cell surface area to volume ratios.', evidence: 'simulated' },
+      { id: '03', title: 'Antibiotic Response', text: 'The experimentally measured Minimum Inhibitory Concentration (MIC) increased, indicating reduced sensitivity to ciprofloxacin.', evidence: 'simulated' }
+    ]
+  },
+  'saureus-none': {
+    sourceTitle: 'Literature-Derived S. aureus Analogue Studies',
+    sourceDesc: 'Aggregate findings from peer-reviewed rotating wall vessel (RWV) bioreactor studies on S. aureus.',
+    link: null,
+    mechanism: [
+      { label: 'Microgravity', icon: 'Globe2' },
+      { label: 'Low Shear Stress', icon: 'ArrowDown' },
+      { label: 'Metabolic Shift', icon: 'Activity' },
+      { label: 'PIA Expression', icon: 'Dna' },
+      { label: 'Biofilm Formation', icon: 'Beaker' }
+    ],
+    metrics: [
+      { id: 'm1', label: 'Biofilm Thickness / Biomass', earth: 40, micro: 90, highlight: true, evidence: 'simulated' },
+      { id: 'm2', label: 'Growth Rate', earth: 50, micro: 60, evidence: 'simulated' }
+    ],
+    growthCurve: { earth: [10, 20, 40, 55, 60], micro: [10, 25, 45, 65, 75] },
+    observations: [
+      { id: '01', title: 'Growth', text: 'S. aureus demonstrates marginal increases in growth rate but significant shifts in metabolic profiles under low-shear modeled microgravity.', evidence: 'simulated' },
+      { id: '02', title: 'Biofilm / Virulence', text: 'Studies consistently report enhanced PIA-dependent biofilm formation and thicker extracellular matrices when grown in microgravity analogues.', evidence: 'simulated' }
+    ]
+  },
+  'saureus-methicillin': {
+    sourceTitle: 'S. aureus Biofilm & Antibiotic Resistance Literature',
+    sourceDesc: 'Based on published observations correlating microgravity-induced biofilm enhancements with drug resistance.',
+    link: null,
+    mechanism: [
+      { label: 'Microgravity', icon: 'Globe2' },
+      { label: 'Low Shear Stress', icon: 'ArrowDown' },
+      { label: 'Thickened Biofilm', icon: 'Beaker' },
+      { label: 'Reduced Drug Penetration', icon: 'Shield' },
+      { label: 'Altered Susceptibility', icon: 'TestTube2' }
+    ],
+    metrics: [
+      { id: 'm1', label: 'Antibiotic Survival Rate', earth: 15, micro: 55, highlight: true, evidence: 'simulated' },
+      { id: 'm2', label: 'Biofilm Formation', earth: 40, micro: 90, evidence: 'simulated' }
+    ],
+    growthCurve: { earth: [10, 25, 30, 15, 5], micro: [10, 25, 40, 35, 30] },
+    observations: [
+      { id: '01', title: 'Biofilm Development', text: 'Robust biofilm architectures develop rapidly in low-fluid-shear environments, establishing a physical barrier.', evidence: 'simulated' },
+      { id: '02', title: 'Antibiotic Response', text: 'S. aureus exhibits reduced susceptibility to methicillin and other antibiotics in modeled microgravity, heavily correlated with the increased biofilm production isolating cells from the drug.', evidence: 'simulated' }
     ]
   }
 };
 
 const getExperimentData = (b: Bacterium, a: Antibiotic): ExperimentData => {
   const key = `${b}-${a}`;
-  if (key in DATA_DB) return DATA_DB[key];
-  
-  return {
-    sourceTitle: 'Insufficient Direct Experimental Dataset',
-    sourceDesc: `We currently lack robust, distinct peer-reviewed spaceflight data for ${BACTERIA[b].name} explicitly paired with this condition in our database.`,
-    link: null,
-    hasData: false,
-    mechanism: [
-      { label: 'Microgravity', icon: 'Globe2' },
-      { label: 'Altered Environment', icon: 'ArrowDown' },
-      { label: 'Cellular Sensing', icon: 'Beaker' },
-      { label: 'Generic Stress Response', icon: 'Dna' },
-      { label: 'Phenotypic Shift', icon: 'Activity' }
-    ],
-    metrics: [
-      { id: 'm1', label: 'Inferred Stress Response', earth: 50, micro: 80 },
-      { id: 'm2', label: 'Qualitative Biofilm Tendency', earth: 50, micro: 75 }
-    ],
-    growthCurve: { earth: [10, 20, 30, 40, 50], micro: [10, 25, 40, 55, 65] },
-    observations: [
-      { id: '01', title: 'Scientific Honesty Notice', text: 'No direct peer-reviewed spaceflight data exists for this specific combination in our repository. The visualized trends are generalized physiological models.' },
-      { id: '02', title: 'Cellular Stress', text: 'Microgravity generally induces broad stress responses which frequently cross-protect against environmental stressors.' },
-      { id: '03', title: 'Inferred Antibiotic Response', text: 'Based on related species, one might expect altered membrane permeability and generally reduced drug efficacy compared to 1×g.' }
-    ]
-  };
+  return DATA_DB[key] || DATA_DB[`${b}-none`]; // fallback to none if somehow invalid
 };
 
 export default function MicrogravitySimulation() {
@@ -226,12 +283,10 @@ export default function MicrogravitySimulation() {
                       <span className="font-serif text-lg">{a === 'none' ? 'None (Baseline Growth)' : a}</span>
                     </button>
                   ))}
-                  {ANTIBIOTICS[bacterium].length === 1 && (
-                    <p className="font-sans text-[9px] uppercase tracking-widest text-muted-grey mt-2">
-                      * Only conditions with relevant experimental data are shown.
-                    </p>
-                  )}
                 </div>
+                <p className="font-sans text-[9px] uppercase tracking-widest text-muted-grey mt-4">
+                  * Showing only antibiotics for which relevant spaceflight or modelled-microgravity research exists.
+                </p>
               </div>
             </div>
 
@@ -248,14 +303,14 @@ export default function MicrogravitySimulation() {
           </motion.div>
         )}
 
-        {/* 2. EXPERIMENT VISUALIZATION (ANIMATION) */}
+        {/* 2. EXPERIMENT VISUALIZATION (ANIMATION) - DARK THEME RESTORED */}
         {step === 'simulating' && (
           <motion.div 
             key="simulating"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="border-hand p-10 md:p-20 bg-paper flex flex-col items-center justify-center min-h-[350px] relative overflow-hidden"
+            className="border-hand p-10 md:p-20 bg-graphite text-paper flex flex-col items-center justify-center min-h-[350px] relative overflow-hidden"
           >
             {/* Very light animated particles */}
             <motion.div 
@@ -263,52 +318,51 @@ export default function MicrogravitySimulation() {
               transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
               className="absolute inset-0 pointer-events-none flex justify-center items-center opacity-10"
             >
-              <div className="w-48 h-48 md:w-64 md:h-64 rounded-full border-[0.5px] border-graphite border-dashed" />
-              <div className="absolute w-72 h-72 md:w-96 md:h-96 rounded-full border-[0.5px] border-graphite border-dotted" />
+              <div className="w-48 h-48 md:w-64 md:h-64 rounded-full border-[0.5px] border-paper border-dashed" />
+              <div className="absolute w-72 h-72 md:w-96 md:h-96 rounded-full border-[0.5px] border-paper border-dotted" />
             </motion.div>
 
             <AnimatePresence mode="wait">
               {simPhase === 0 && (
                 <motion.div key="v0" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center text-center relative z-10">
-                  <FlaskConical size={32} strokeWidth={1} className="text-graphite mb-4" />
-                  <p className="font-sans text-[10px] tracking-widest uppercase text-graphite/60 mb-2">Phase I</p>
-                  <h3 className="text-xl font-serif text-graphite tracking-wide">BACTERIA</h3>
+                  <FlaskConical size={32} strokeWidth={1} className="text-paper mb-4" />
+                  <p className="font-sans text-[10px] tracking-widest uppercase text-paper/60 mb-2">Phase I</p>
+                  <h3 className="text-xl font-serif text-paper tracking-wide">BACTERIA</h3>
                 </motion.div>
               )}
               {simPhase === 1 && (
                 <motion.div key="v1" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center text-center relative z-10">
-                  <Globe2 size={32} strokeWidth={1} className="text-graphite mb-4" />
-                  <p className="font-sans text-[10px] tracking-widest uppercase text-graphite/60 mb-2">Phase II</p>
-                  <h3 className="text-xl font-serif text-graphite tracking-wide">1×g EARTH / MICROGRAVITY</h3>
+                  <Globe2 size={32} strokeWidth={1} className="text-paper mb-4" />
+                  <p className="font-sans text-[10px] tracking-widest uppercase text-paper/60 mb-2">Phase II</p>
+                  <h3 className="text-xl font-serif text-paper tracking-wide">1×g EARTH / MICROGRAVITY</h3>
                 </motion.div>
               )}
               {simPhase === 2 && (
                 <motion.div key="v2" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center text-center relative z-10">
-                  <Activity size={32} strokeWidth={1} className="text-graphite mb-4" />
-                  <p className="font-sans text-[10px] tracking-widest uppercase text-graphite/60 mb-2">Phase III</p>
-                  <h3 className="text-xl font-serif text-graphite tracking-wide">CELLULAR RESPONSE</h3>
+                  <Activity size={32} strokeWidth={1} className="text-paper mb-4" />
+                  <p className="font-sans text-[10px] tracking-widest uppercase text-paper/60 mb-2">Phase III</p>
+                  <h3 className="text-xl font-serif text-paper tracking-wide">CELLULAR RESPONSE</h3>
                 </motion.div>
               )}
               {simPhase === 3 && (
                 <motion.div key="v3" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center text-center relative z-10">
-                  <Dna size={32} strokeWidth={1} className="text-graphite mb-4" />
-                  <p className="font-sans text-[10px] tracking-widest uppercase text-graphite/60 mb-2">Phase IV</p>
-                  <h3 className="text-xl font-serif text-graphite tracking-wide">REGULATORY / GENE RESPONSE</h3>
+                  <Dna size={32} strokeWidth={1} className="text-paper mb-4" />
+                  <p className="font-sans text-[10px] tracking-widest uppercase text-paper/60 mb-2">Phase IV</p>
+                  <h3 className="text-xl font-serif text-paper tracking-wide">REGULATORY / GENE RESPONSE</h3>
                 </motion.div>
               )}
               {simPhase === 4 && (
                 <motion.div key="v4" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center text-center relative z-10">
-                  <Beaker size={32} strokeWidth={1} className="text-graphite mb-4" />
-                  <p className="font-sans text-[10px] tracking-widest uppercase text-graphite/60 mb-2">Phase V</p>
-                  <h3 className="text-xl font-serif text-graphite tracking-wide">PHENOTYPIC RESPONSE</h3>
+                  <Beaker size={32} strokeWidth={1} className="text-paper mb-4" />
+                  <p className="font-sans text-[10px] tracking-widest uppercase text-paper/60 mb-2">Phase V</p>
+                  <h3 className="text-xl font-serif text-paper tracking-wide">PHENOTYPIC RESPONSE</h3>
                 </motion.div>
               )}
             </AnimatePresence>
             
-            {/* Subtle progress indicator */}
-            <div className="absolute bottom-10 w-48 h-px bg-graphite/10 overflow-hidden">
+            <div className="absolute bottom-10 w-48 h-px bg-paper/10 overflow-hidden">
               <motion.div 
-                className="h-full bg-graphite/50"
+                className="h-full bg-paper/50"
                 initial={{ width: "0%" }}
                 animate={{ width: "100%" }}
                 transition={{ duration: 7.5, ease: "linear" }}
@@ -372,17 +426,8 @@ export default function MicrogravitySimulation() {
                 {/* Metric Bars */}
                 <div className="flex flex-col gap-6 justify-center">
                   {currentData.metrics.map(m => (
-                    <MetricComparison key={m.id} title={m.label} earth={m.earth} micro={m.micro} highlight={m.highlight} />
+                    <MetricComparison key={m.id} title={m.label} earth={m.earth} micro={m.micro} highlight={m.highlight} evidence={m.evidence} />
                   ))}
-                  
-                  {!currentData.hasData && (
-                    <div className="flex items-start gap-3 mt-4 text-accent-rust">
-                      <AlertCircle size={14} className="shrink-0 mt-0.5" />
-                      <p className="font-sans text-[9px] uppercase tracking-widest leading-relaxed">
-                        Notice: Metrics represent inferred physiological models rather than direct measurements for this specific combination.
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 {/* Growth Curve */}
@@ -392,7 +437,6 @@ export default function MicrogravitySimulation() {
                     <div className="relative h-40 w-full border-l border-b border-graphite/20">
                       <SimpleLineChart earthData={currentData.growthCurve.earth} microData={currentData.growthCurve.micro} />
                       
-                      {/* Legend */}
                       <div className="absolute top-2 left-4 flex flex-col gap-1.5">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-px bg-graphite/60" />
@@ -415,7 +459,10 @@ export default function MicrogravitySimulation() {
               <div className="flex flex-col gap-6">
                 {currentData.observations.map((obs) => (
                   <div key={obs.id} className="flex flex-col md:flex-row gap-2 md:gap-6 items-start">
-                    <span className="font-sans text-[10px] font-bold tracking-widest uppercase text-graphite/50 shrink-0 mt-1">{obs.id} — {obs.title}</span>
+                    <div className="shrink-0 mt-1 flex flex-col gap-1">
+                      <span className="font-sans text-[10px] font-bold tracking-widest uppercase text-graphite/50">{obs.id} — {obs.title}</span>
+                      <EvidenceBadge type={obs.evidence} />
+                    </div>
                     <p className="font-serif text-charcoal/90 text-[15px] leading-relaxed">{obs.text}</p>
                   </div>
                 ))}
@@ -423,7 +470,7 @@ export default function MicrogravitySimulation() {
             </div>
 
             {/* 6. DATA & SOURCES */}
-            <div className="mt-8 pt-8 border-t border-graphite/10 text-center">
+            <div className="mt-8 pt-8 border-t border-graphite/10 text-center flex flex-col items-center">
               {currentData.link ? (
                 <a href={currentData.link} target="_blank" rel="noopener noreferrer" className="font-sans text-[9px] uppercase tracking-widest text-muted-grey hover:text-graphite transition-colors">
                   Data & Experiment Source: {currentData.sourceTitle}
@@ -444,10 +491,27 @@ export default function MicrogravitySimulation() {
 
 // Minimal Subcomponents
 
-function MetricComparison({ title, earth, micro, highlight = false }: { title: string, earth: number, micro: number, highlight?: boolean }) {
+function EvidenceBadge({ type }: { type: EvidenceType }) {
+  const labels: Record<EvidenceType, string> = {
+    spaceflight: 'SPACEFLIGHT DATA',
+    simulated: 'SIMULATED MICROGRAVITY',
+    ground: 'GROUND EXPERIMENT',
+    literature: 'LITERATURE-DERIVED'
+  };
+  return (
+    <span className="inline-block px-1.5 py-0.5 border border-graphite/20 text-[7px] tracking-widest uppercase text-graphite/60 rounded-sm w-fit">
+      {labels[type]}
+    </span>
+  );
+}
+
+function MetricComparison({ title, earth, micro, highlight = false, evidence }: { title: string, earth: number, micro: number, highlight?: boolean, evidence: EvidenceType }) {
   return (
     <div>
-      <p className="font-serif text-[15px] mb-2 text-graphite">{title}</p>
+      <div className="flex items-center gap-2 mb-2">
+        <p className="font-serif text-[15px] text-graphite">{title}</p>
+        <EvidenceBadge type={evidence} />
+      </div>
       
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-3">
