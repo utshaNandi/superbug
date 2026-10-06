@@ -229,7 +229,7 @@ export default function MicrogravitySimulation() {
   const currentData = getExperimentData(bacterium, antibiotic);
 
   return (
-    <section className="px-4 md:px-6 py-16 md:py-24 max-w-4xl mx-auto w-full relative z-10 mt-8">
+    <section id="simulation" className="px-4 md:px-6 py-16 md:py-24 max-w-4xl mx-auto w-full relative z-10 mt-8">
       {/* Simulation Header */}
       <div className="mb-10 md:mb-16">
         <span className="font-sans text-[10px] tracking-widest uppercase text-accent-blue block mb-2 font-bold border-b border-accent-blue/20 w-fit pb-1">Interactive Exhibition</span>

@@ -41,6 +41,7 @@ export default function RootLayout({
           <div className="flex gap-4 md:gap-6 overflow-x-auto no-scrollbar items-center pr-2">
             <a href="/#earth-vs-space" className="hover:text-graphite transition-colors whitespace-nowrap py-3 block min-h-[44px] link-underline">Earth vs Space</a>
             <a href="/#salmonella" className="hover:text-graphite transition-colors whitespace-nowrap py-3 block min-h-[44px] link-underline">Salmonella</a>
+            <a href="/#simulation" className="hover:text-graphite transition-colors whitespace-nowrap py-3 block min-h-[44px] link-underline">Simulation</a>
             <a href="/#research-shelf" className="hover:text-graphite transition-colors whitespace-nowrap py-3 block min-h-[44px] link-underline">Archive</a>
           </div>
         </nav>
