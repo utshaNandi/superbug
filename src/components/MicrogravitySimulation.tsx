@@ -2,102 +2,156 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rocket, FlaskConical, Beaker, Dna, Activity, ChevronRight, Info, AlertTriangle, ChevronDown, ArrowDown, Globe2 } from 'lucide-react';
+import { Rocket, FlaskConical, Beaker, Dna, Activity, ArrowDown, Globe2, Shield, TestTube2, AlertCircle, ChevronRight } from 'lucide-react';
 
 const smoothEase = [0.22, 1, 0.36, 1] as const;
 
 type Bacterium = 'ecoli' | 'salmonella' | 'saureus';
-type Antibiotic = 'none' | 'gentamicin' | 'ciprofloxacin' | 'methicillin';
-type Exposure = 'short' | 'long';
+type Antibiotic = 'none' | 'gentamicin' | 'ciprofloxacin';
 
 const BACTERIA = {
-  ecoli: { name: 'E. coli', icon: '🦠' },
-  salmonella: { name: 'S. typhimurium', icon: '🔬' },
-  saureus: { name: 'S. aureus', icon: '🧫' }
+  ecoli: { name: 'E. coli' },
+  salmonella: { name: 'S. typhimurium' },
+  saureus: { name: 'S. aureus' }
 };
 
+// Only show antibiotics for which relevant experimental data exists.
 const ANTIBIOTICS: Record<Bacterium, Antibiotic[]> = {
   ecoli: ['none', 'gentamicin', 'ciprofloxacin'],
-  salmonella: ['none', 'ciprofloxacin'],
-  saureus: ['none', 'methicillin']
+  salmonella: ['none'],
+  saureus: ['none']
 };
 
-const DATA_DB = {
+const ICONS: Record<string, React.ElementType> = {
+  Globe2, ArrowDown, Beaker, Dna, Activity, Shield, TestTube2, AlertCircle, Rocket, FlaskConical
+};
+
+type Metric = { id: string; label: string; earth: number; micro: number; highlight?: boolean };
+type Observation = { id: string; title: string; text: string };
+type Mechanism = { label: string; icon: string };
+
+type ExperimentData = {
+  sourceTitle: string;
+  sourceDesc: string;
+  link: string | null;
+  hasData: boolean;
+  mechanism: Mechanism[];
+  metrics: Metric[];
+  growthCurve: { earth: number[]; micro: number[] } | null;
+  observations: Observation[];
+};
+
+const DATA_DB: Record<string, ExperimentData> = {
   'salmonella-none': {
     sourceTitle: 'NASA MICROBE — STS-115',
     sourceDesc: 'Spaceflight investigation of microbial gene expression and virulence. Flown on Space Shuttle Atlantis (2006).',
     link: 'https://www.nasa.gov/ames/space-biosciences/microbe-sts-115/',
     hasData: true,
-    earth: { growth: 70, biofilm: 30, stress: 40, survival: 100 },
-    micro: { growth: 90, biofilm: 85, stress: 80, survival: 100 },
-    findings: [
-      '167 genes showed differential expression in flight samples.',
-      'Increased virulence in murine models compared to ground controls.',
-      'Global regulator Hfq identified as a key orchestrator of the spaceflight response.',
-      'Increased extracellular matrix accumulation (biofilm-like behavior).'
+    mechanism: [
+      { label: 'Microgravity', icon: 'Globe2' },
+      { label: 'Altered Fluid Shear', icon: 'ArrowDown' },
+      { label: 'Cellular Sensing', icon: 'Beaker' },
+      { label: 'Hfq Gene Regulation', icon: 'Dna' },
+      { label: 'Increased Virulence', icon: 'Activity' }
     ],
-    growthCurve: { earth: [10, 20, 45, 65, 70], micro: [10, 25, 55, 80, 90] }
+    metrics: [
+      { id: 'm1', label: 'Final Growth Density', earth: 70, micro: 90 },
+      { id: 'm2', label: 'Extracellular Matrix (Biofilm)', earth: 30, micro: 85, highlight: true },
+      { id: 'm3', label: 'Differentially Expressed Genes', earth: 0, micro: 100 }
+    ],
+    growthCurve: { earth: [10, 20, 45, 65, 70], micro: [10, 25, 55, 80, 90] },
+    observations: [
+      { id: '01', title: 'Growth', text: 'Microgravity produced a measurable reduction in lag phase, leading to slightly higher final cell densities compared to 1×g ground controls.' },
+      { id: '02', title: 'Regulatory Response', text: 'Significant changes in gene expression were observed across 167 genes, orchestrated heavily by the Hfq RNA chaperone pathway.' },
+      { id: '03', title: 'Biofilm / Virulence', text: 'Research indicates altered behaviour resulting in increased extracellular matrix accumulation and significantly enhanced virulence in murine models.' }
+    ]
   },
   'ecoli-gentamicin': {
     sourceTitle: 'NASA EcAMSat (OS-813)',
     sourceDesc: 'Spaceflight investigation of E. coli antibiotic resistance using the EcAMSat nanosatellite.',
     link: 'https://osdr.nasa.gov/bio/repo/data/experiments/OS-813',
     hasData: true,
-    earth: { growth: 60, biofilm: 20, stress: 50, survival: 15 },
-    micro: { growth: 60, biofilm: 30, stress: 85, survival: 65 },
-    findings: [
-      'E. coli exhibited significantly increased survival when exposed to gentamicin in spaceflight.',
-      'Resistance mechanism was dependent on the σS (RpoS) general stress response pathway.',
-      'Microgravity radically altered the stress-response baseline, pre-adapting cells to antibiotic assault.'
+    mechanism: [
+      { label: 'Microgravity', icon: 'Globe2' },
+      { label: 'Quiescent Fluid', icon: 'ArrowDown' },
+      { label: 'σS (RpoS) Activation', icon: 'Dna' },
+      { label: 'Gentamicin Assault', icon: 'TestTube2' },
+      { label: 'Enhanced Survival', icon: 'Shield' }
     ],
-    growthCurve: { earth: [10, 30, 40, 20, 10], micro: [10, 30, 45, 50, 45] } 
+    metrics: [
+      { id: 'm1', label: 'Antibiotic Survival Rate', earth: 15, micro: 65, highlight: true },
+      { id: 'm2', label: 'RpoS Stress Response', earth: 40, micro: 85 }
+    ],
+    growthCurve: { earth: [10, 30, 40, 20, 10], micro: [10, 30, 45, 50, 45] },
+    observations: [
+      { id: '01', title: 'Growth & Transport', text: 'The lack of convective mixing in microgravity radically altered nutrient and drug transport to the bacterial envelope.' },
+      { id: '02', title: 'Cellular Stress', text: 'Microgravity-associated changes pre-adapted the cells by upregulating the general stress response pathway mediated by σS (RpoS).' },
+      { id: '03', title: 'Antibiotic Response', text: 'E. coli showed a significantly higher survival rate and delayed killing when exposed to gentamicin under spaceflight conditions.' }
+    ]
   },
   'ecoli-ciprofloxacin': {
     sourceTitle: 'Simulated Microgravity Study (PMC9502502)',
     sourceDesc: 'Peer-reviewed laboratory study on E. coli growth and antibiotic sensitivity under simulated microgravity.',
     link: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC9502502/',
     hasData: true,
-    earth: { growth: 80, biofilm: 40, stress: 30, survival: 20 },
-    micro: { growth: 85, biofilm: 60, stress: 60, survival: 50 },
-    findings: [
-      'Experimentally measured Minimum Inhibitory Concentration (MIC) was altered under simulated microgravity.',
-      'Bacteria showed enhanced growth rates in the exponential phase.',
-      'Modifications in cell size and morphology were observed, potentially reducing drug permeability.'
+    mechanism: [
+      { label: 'Simulated Microgravity', icon: 'Globe2' },
+      { label: 'Morphological Shift', icon: 'Activity' },
+      { label: 'Envelope Thickening', icon: 'Shield' },
+      { label: 'Reduced Permeability', icon: 'ArrowDown' },
+      { label: 'Elevated MIC', icon: 'TestTube2' }
     ],
-    growthCurve: { earth: [5, 15, 35, 25, 15], micro: [5, 20, 50, 45, 35] }
+    metrics: [
+      { id: 'm1', label: 'Growth Rate (Exponential)', earth: 60, micro: 85 },
+      { id: 'm2', label: 'Minimum Inhibitory Concentration (MIC)', earth: 30, micro: 70, highlight: true },
+      { id: 'm3', label: 'Cell Size / Volume', earth: 80, micro: 40 }
+    ],
+    growthCurve: { earth: [5, 15, 35, 25, 15], micro: [5, 20, 50, 45, 35] },
+    observations: [
+      { id: '01', title: 'Growth', text: 'Enhanced growth rates were experimentally observed during the exponential phase under modeled microgravity.' },
+      { id: '02', title: 'Cellular Morphology', text: 'Modifications in cell size and morphology effectively altered cell surface area to volume ratios.' },
+      { id: '03', title: 'Antibiotic Response', text: 'The experimentally measured Minimum Inhibitory Concentration (MIC) increased, indicating reduced sensitivity to ciprofloxacin.' }
+    ]
   }
 };
 
-const getExperimentData = (b: Bacterium, a: Antibiotic) => {
+const getExperimentData = (b: Bacterium, a: Antibiotic): ExperimentData => {
   const key = `${b}-${a}`;
-  if (key in DATA_DB) return (DATA_DB as any)[key];
+  if (key in DATA_DB) return DATA_DB[key];
   
   return {
-    hasData: false,
-    sourceTitle: 'No Direct Experimental Dataset',
-    sourceDesc: `We lack peer-reviewed spaceflight or robust simulated microgravity data for ${BACTERIA[b].name} exposed to ${a}.`,
+    sourceTitle: 'Insufficient Direct Experimental Dataset',
+    sourceDesc: `We currently lack robust, distinct peer-reviewed spaceflight data for ${BACTERIA[b].name} explicitly paired with this condition in our database.`,
     link: null,
-    earth: { growth: 50, biofilm: 50, stress: 50, survival: 50 },
-    micro: { growth: 65, biofilm: 70, stress: 80, survival: 75 },
-    findings: [
-      'Insufficient direct experimental data for this combination.',
-      'Research-based qualitative expectation: Microgravity generally induces a generalized stress response (e.g., via RpoS or Hfq).',
-      'Expect altered membrane permeability, thickened biofilms, and generally reduced drug efficacy compared to 1×g controls.'
+    hasData: false,
+    mechanism: [
+      { label: 'Microgravity', icon: 'Globe2' },
+      { label: 'Altered Environment', icon: 'ArrowDown' },
+      { label: 'Cellular Sensing', icon: 'Beaker' },
+      { label: 'Generic Stress Response', icon: 'Dna' },
+      { label: 'Phenotypic Shift', icon: 'Activity' }
     ],
-    growthCurve: { earth: [10, 20, 30, 40, 50], micro: [10, 25, 40, 55, 65] }
+    metrics: [
+      { id: 'm1', label: 'Inferred Stress Response', earth: 50, micro: 80 },
+      { id: 'm2', label: 'Qualitative Biofilm Tendency', earth: 50, micro: 75 }
+    ],
+    growthCurve: { earth: [10, 20, 30, 40, 50], micro: [10, 25, 40, 55, 65] },
+    observations: [
+      { id: '01', title: 'Scientific Honesty Notice', text: 'No direct peer-reviewed spaceflight data exists for this specific combination in our repository. The visualized trends are generalized physiological models.' },
+      { id: '02', title: 'Cellular Stress', text: 'Microgravity generally induces broad stress responses which frequently cross-protect against environmental stressors.' },
+      { id: '03', title: 'Inferred Antibiotic Response', text: 'Based on related species, one might expect altered membrane permeability and generally reduced drug efficacy compared to 1×g.' }
+    ]
   };
 };
 
 export default function MicrogravitySimulation() {
   const [bacterium, setBacterium] = useState<Bacterium>('salmonella');
   const [antibiotic, setAntibiotic] = useState<Antibiotic>('none');
-  const [exposure, setExposure] = useState<Exposure>('long');
-  const [environment, setEnvironment] = useState<'microgravity' | '1g'>('microgravity');
   
   const [step, setStep] = useState<'setup' | 'simulating' | 'results'>('setup');
   const [simPhase, setSimPhase] = useState(0);
-  const [showSource, setShowSource] = useState(false);
 
+  // Enforce valid antibiotics for the chosen bacterium
   useEffect(() => {
     if (!ANTIBIOTICS[bacterium].includes(antibiotic)) {
       setAntibiotic(ANTIBIOTICS[bacterium][0]);
@@ -107,40 +161,45 @@ export default function MicrogravitySimulation() {
   const runSimulation = () => {
     setStep('simulating');
     setSimPhase(0);
-    setTimeout(() => setSimPhase(1), 2000);
-    setTimeout(() => setSimPhase(2), 4500);
-    setTimeout(() => setSimPhase(3), 7000);
-    setTimeout(() => setStep('results'), 9500);
+    // Visual sequence timing
+    setTimeout(() => setSimPhase(1), 1500); // 1xG Earth / Microgravity
+    setTimeout(() => setSimPhase(2), 3000); // Cellular Response
+    setTimeout(() => setSimPhase(3), 4500); // Regulatory Response
+    setTimeout(() => setSimPhase(4), 6000); // Phenotypic Response
+    setTimeout(() => setStep('results'), 7500); // Results
   };
 
   const currentData = getExperimentData(bacterium, antibiotic);
 
   return (
-    <section className="px-4 md:px-6 py-16 md:py-24 max-w-5xl mx-auto w-full relative z-10 border-t border-graphite/10 mt-12">
+    <section className="px-4 md:px-6 py-16 md:py-24 max-w-4xl mx-auto w-full relative z-10 mt-8">
+      {/* Simulation Header */}
       <div className="mb-10 md:mb-16">
-        <span className="font-hand text-lg md:text-xl text-accent-blue block mb-2">Interactive Exhibit</span>
-        <h2 className="text-[clamp(2rem,6vw,3rem)] font-serif leading-tight text-graphite mb-4">
+        <span className="font-sans text-[10px] tracking-widest uppercase text-accent-blue block mb-2 font-bold border-b border-accent-blue/20 w-fit pb-1">Interactive Exhibition</span>
+        <h2 className="text-[clamp(2rem,5vw,2.5rem)] font-serif leading-tight text-graphite mb-4">
           Microgravity Simulation
         </h2>
-        <p className="font-serif text-lg md:text-xl text-charcoal/80 max-w-2xl leading-relaxed">
-          Run a space-biology experiment. Observe how physical forces alter cellular sensing, regulatory networks, and phenotypic behavior.
+        <p className="font-serif text-charcoal/80 max-w-2xl leading-relaxed">
+          Select an organism and observe its experimentally documented response to microgravity conditions.
         </p>
       </div>
 
       <AnimatePresence mode="wait">
+        
+        {/* 1. SETUP */}
         {step === 'setup' && (
           <motion.div 
             key="setup"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.5, ease: smoothEase }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4, ease: smoothEase }}
             className="border-hand p-6 md:p-10 bg-paper/60 backdrop-blur-sm"
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-10">
-              
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 mb-10">
+              {/* Bacterium Select */}
               <div>
-                <p className="font-sans text-xs tracking-widest uppercase text-muted-grey mb-4 font-bold border-b border-graphite/20 pb-2">1. Bacterium</p>
+                <p className="font-sans text-[10px] tracking-widest uppercase text-muted-grey mb-4 font-bold border-b border-graphite/20 pb-2">1. Bacterium</p>
                 <div className="flex flex-col gap-3">
                   {(Object.keys(BACTERIA) as Bacterium[]).map(b => (
                     <button 
@@ -154,285 +213,228 @@ export default function MicrogravitySimulation() {
                 </div>
               </div>
 
+              {/* Antibiotic Select */}
               <div>
-                <p className="font-sans text-xs tracking-widest uppercase text-muted-grey mb-4 font-bold border-b border-graphite/20 pb-2">2. Environment</p>
-                <div className="flex flex-col gap-3 mb-6">
-                  <button 
-                    onClick={() => setEnvironment('1g')}
-                    className={`text-left px-4 py-3 border-hand transition-all duration-300 ${environment === '1g' ? 'bg-accent-blue/10 text-accent-blue border-accent-blue/30 shadow-sm relative overflow-hidden scale-[1.02]' : 'bg-transparent hover:bg-white/50 text-graphite opacity-70'}`}
-                  >
-                    <span className="font-serif text-lg relative z-10">1×g Earth (Control)</span>
-                  </button>
-                  <button 
-                    onClick={() => setEnvironment('microgravity')}
-                    className={`text-left px-4 py-3 border-hand transition-all duration-300 ${environment === 'microgravity' ? 'bg-accent-blue/10 text-accent-blue border-accent-blue/30 shadow-sm relative overflow-hidden scale-[1.02]' : 'bg-transparent hover:bg-white/50 text-graphite'}`}
-                  >
-                    {environment === 'microgravity' && <div className="absolute top-0 right-0 p-2 opacity-20"><Rocket size={24} /></div>}
-                    <span className="font-serif text-lg relative z-10">Microgravity (Test)</span>
-                  </button>
-                </div>
-                
-                <p className="font-sans text-xs tracking-widest uppercase text-muted-grey mb-4 font-bold border-b border-graphite/20 pb-2">3. Exposure</p>
-                <div className="flex gap-3">
-                  {(['short', 'long'] as Exposure[]).map(e => (
-                    <button 
-                      key={e}
-                      onClick={() => setExposure(e)}
-                      className={`flex-1 capitalize px-3 py-2 border-hand transition-all duration-300 ${exposure === e ? 'bg-graphite text-paper' : 'bg-transparent hover:bg-white/50 text-graphite'}`}
-                    >
-                      <span className="font-serif">{e}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="font-sans text-xs tracking-widest uppercase text-muted-grey mb-4 font-bold border-b border-graphite/20 pb-2">4. Antibiotic</p>
+                <p className="font-sans text-[10px] tracking-widest uppercase text-muted-grey mb-4 font-bold border-b border-graphite/20 pb-2">2. Antibiotic</p>
                 <div className="flex flex-col gap-3">
                   {ANTIBIOTICS[bacterium].map(a => (
                     <button 
                       key={a}
                       onClick={() => setAntibiotic(a)}
-                      className={`text-left px-4 py-3 border-hand transition-all duration-300 capitalize ${antibiotic === a ? 'bg-accent-rust text-paper shadow-md scale-[1.02]' : 'bg-transparent hover:bg-white/50 text-graphite'}`}
+                      className={`text-left px-4 py-3 border-hand transition-all duration-300 capitalize ${antibiotic === a ? 'bg-graphite text-paper shadow-md scale-[1.02]' : 'bg-transparent hover:bg-white/50 text-graphite'}`}
                     >
-                      <span className="font-serif text-lg">{a}</span>
+                      <span className="font-serif text-lg">{a === 'none' ? 'None (Baseline Growth)' : a}</span>
                     </button>
                   ))}
+                  {ANTIBIOTICS[bacterium].length === 1 && (
+                    <p className="font-sans text-[9px] uppercase tracking-widest text-muted-grey mt-2">
+                      * Only conditions with relevant experimental data are shown.
+                    </p>
+                  )}
                 </div>
               </div>
-
             </div>
 
-            <div className="flex justify-center mt-8">
+            <div className="flex justify-center mt-6">
               <button 
                 onClick={runSimulation}
-                className="group relative px-8 py-4 border-hand bg-graphite text-paper overflow-hidden transition-transform duration-300 hover:scale-[1.02] active:scale-95 flex items-center gap-3"
+                className="group relative px-10 py-4 border-hand bg-graphite text-paper overflow-hidden transition-transform duration-300 hover:scale-[1.02] active:scale-95 flex items-center gap-3"
               >
                 <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                <Activity className="relative z-10 animate-pulse" size={20} />
-                <span className="font-sans text-sm tracking-widest uppercase font-bold relative z-10">Run Simulation</span>
+                <span className="font-sans text-xs tracking-widest uppercase font-bold relative z-10">Run Experiment</span>
+                <ChevronRight className="relative z-10" size={16} />
               </button>
             </div>
           </motion.div>
         )}
 
+        {/* 2. EXPERIMENT VISUALIZATION (ANIMATION) */}
         {step === 'simulating' && (
           <motion.div 
             key="simulating"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="border-hand p-10 md:p-20 bg-graphite text-paper flex flex-col items-center justify-center min-h-[400px] relative overflow-hidden"
+            className="border-hand p-10 md:p-20 bg-paper flex flex-col items-center justify-center min-h-[350px] relative overflow-hidden"
           >
+            {/* Very light animated particles */}
             <motion.div 
-              animate={{ y: [0, -20, 0], opacity: [0.2, 0.5, 0.2] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="absolute inset-0 pointer-events-none flex justify-center items-center"
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+              className="absolute inset-0 pointer-events-none flex justify-center items-center opacity-10"
             >
-              <div className="w-64 h-64 rounded-full border border-paper/10" />
-              <div className="absolute w-96 h-96 rounded-full border border-paper/5" />
+              <div className="w-48 h-48 md:w-64 md:h-64 rounded-full border-[0.5px] border-graphite border-dashed" />
+              <div className="absolute w-72 h-72 md:w-96 md:h-96 rounded-full border-[0.5px] border-graphite border-dotted" />
             </motion.div>
 
             <AnimatePresence mode="wait">
               {simPhase === 0 && (
-                <motion.div key="p0" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="flex flex-col items-center text-center">
-                  <FlaskConical size={48} className="text-accent-blue mb-6" strokeWidth={1} />
-                  <p className="font-sans text-xs tracking-widest uppercase text-muted-grey mb-2">Phase 1</p>
-                  <h3 className="text-2xl font-serif">Inoculating Experimental Hardware...</h3>
-                  <p className="text-sm text-paper/60 mt-4 max-w-md">Preparing {BACTERIA[bacterium].name} payload for launch conditions.</p>
+                <motion.div key="v0" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center text-center relative z-10">
+                  <FlaskConical size={32} strokeWidth={1} className="text-graphite mb-4" />
+                  <p className="font-sans text-[10px] tracking-widest uppercase text-graphite/60 mb-2">Phase I</p>
+                  <h3 className="text-xl font-serif text-graphite tracking-wide">BACTERIA</h3>
                 </motion.div>
               )}
               {simPhase === 1 && (
-                <motion.div key="p1" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="flex flex-col items-center text-center">
-                  <motion.div animate={{ y: [-10, -30], opacity: [1, 0.5] }} transition={{ repeat: Infinity, duration: 1.5 }} className="mb-6">
-                    <Rocket size={48} className="text-accent-rust" strokeWidth={1} />
-                  </motion.div>
-                  <p className="font-sans text-xs tracking-widest uppercase text-muted-grey mb-2">Phase 2</p>
-                  <h3 className="text-2xl font-serif">Microgravity Exposure</h3>
-                  <p className="text-sm text-paper/60 mt-4 max-w-md">Physical forces altered. Lack of convective mixing and sedimentations leads to a quiescent fluid environment.</p>
+                <motion.div key="v1" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center text-center relative z-10">
+                  <Globe2 size={32} strokeWidth={1} className="text-graphite mb-4" />
+                  <p className="font-sans text-[10px] tracking-widest uppercase text-graphite/60 mb-2">Phase II</p>
+                  <h3 className="text-xl font-serif text-graphite tracking-wide">1×g EARTH / MICROGRAVITY</h3>
                 </motion.div>
               )}
               {simPhase === 2 && (
-                <motion.div key="p2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="flex flex-col items-center text-center">
-                  <Dna size={48} className="text-accent-green mb-6" strokeWidth={1} />
-                  <p className="font-sans text-xs tracking-widest uppercase text-muted-grey mb-2">Phase 3</p>
-                  <h3 className="text-2xl font-serif">Cellular Sensing & Regulation</h3>
-                  <p className="text-sm text-paper/60 mt-4 max-w-md">Bacteria sense altered transport. Global regulators (e.g., Hfq, RpoS) reprogram gene expression across hundreds of loci.</p>
+                <motion.div key="v2" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center text-center relative z-10">
+                  <Activity size={32} strokeWidth={1} className="text-graphite mb-4" />
+                  <p className="font-sans text-[10px] tracking-widest uppercase text-graphite/60 mb-2">Phase III</p>
+                  <h3 className="text-xl font-serif text-graphite tracking-wide">CELLULAR RESPONSE</h3>
                 </motion.div>
               )}
               {simPhase === 3 && (
-                <motion.div key="p3" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="flex flex-col items-center text-center">
-                  <Activity size={48} className="text-paper mb-6" strokeWidth={1} />
-                  <p className="font-sans text-xs tracking-widest uppercase text-muted-grey mb-2">Phase 4</p>
-                  <h3 className="text-2xl font-serif">Phenotypic Manifestation</h3>
-                  <p className="text-sm text-paper/60 mt-4 max-w-md">Applying {antibiotic !== 'none' ? antibiotic : 'measurement assay'}... Recording changes in growth kinetics, stress response, and virulence potential.</p>
+                <motion.div key="v3" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center text-center relative z-10">
+                  <Dna size={32} strokeWidth={1} className="text-graphite mb-4" />
+                  <p className="font-sans text-[10px] tracking-widest uppercase text-graphite/60 mb-2">Phase IV</p>
+                  <h3 className="text-xl font-serif text-graphite tracking-wide">REGULATORY / GENE RESPONSE</h3>
+                </motion.div>
+              )}
+              {simPhase === 4 && (
+                <motion.div key="v4" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center text-center relative z-10">
+                  <Beaker size={32} strokeWidth={1} className="text-graphite mb-4" />
+                  <p className="font-sans text-[10px] tracking-widest uppercase text-graphite/60 mb-2">Phase V</p>
+                  <h3 className="text-xl font-serif text-graphite tracking-wide">PHENOTYPIC RESPONSE</h3>
                 </motion.div>
               )}
             </AnimatePresence>
             
-            <div className="absolute bottom-10 w-64 h-1 bg-paper/10 overflow-hidden">
+            {/* Subtle progress indicator */}
+            <div className="absolute bottom-10 w-48 h-px bg-graphite/10 overflow-hidden">
               <motion.div 
-                className="h-full bg-accent-blue"
+                className="h-full bg-graphite/50"
                 initial={{ width: "0%" }}
                 animate={{ width: "100%" }}
-                transition={{ duration: 9.5, ease: "linear" }}
+                transition={{ duration: 7.5, ease: "linear" }}
               />
             </div>
           </motion.div>
         )}
 
+        {/* RESULTS PAGE */}
         {step === 'results' && (
           <motion.div 
             key="results"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="border-hand bg-paper/80 backdrop-blur-md relative"
+            className="flex flex-col gap-12"
           >
-            <div className="p-6 md:p-10 border-b border-graphite/20 flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white/40">
+            {/* Top summary & Reset */}
+            <div className="border-hand p-6 md:p-8 bg-paper/60 flex flex-col md:flex-row md:items-end justify-between gap-6 backdrop-blur-sm">
               <div>
-                <p className="font-sans text-xs tracking-widest uppercase text-accent-rust mb-2 font-bold flex items-center gap-2">
-                  <FlaskConical size={14} /> Simulation Complete
+                <p className="font-sans text-[10px] tracking-widest uppercase text-muted-grey mb-2 font-bold flex items-center gap-2">
+                  <FlaskConical size={12} /> Simulation Complete
                 </p>
-                <h3 className="text-[clamp(1.8rem,4vw,2.5rem)] font-serif leading-none">Bacterial Response</h3>
-                <p className="font-serif text-charcoal/70 mt-3 text-lg">
-                  {BACTERIA[bacterium].name} • {antibiotic === 'none' ? 'No Antibiotic' : capitalize(antibiotic)} • {capitalize(exposure)} Exposure
+                <h3 className="text-2xl font-serif leading-none text-graphite">{BACTERIA[bacterium].name}</h3>
+                <p className="font-serif text-charcoal/70 mt-2 text-sm">
+                  {antibiotic === 'none' ? 'Baseline Analysis' : `Exposed to ${capitalize(antibiotic)}`}
                 </p>
               </div>
-              
               <button 
                 onClick={() => setStep('setup')}
-                className="px-5 py-2 border-hand text-sm font-sans uppercase tracking-widest hover:bg-graphite hover:text-paper transition-colors duration-300 w-fit shrink-0"
+                className="font-sans text-[10px] uppercase tracking-widest text-graphite hover:text-accent-blue transition-colors duration-300 w-fit shrink-0 border-b border-transparent hover:border-accent-blue pb-0.5"
               >
                 Reset Setup
               </button>
             </div>
 
-            <div className="p-6 md:p-10 flex flex-col lg:flex-row gap-10 md:gap-16">
-              
-              <div className="lg:w-1/3 flex flex-col gap-8">
-                
-                <div className="border border-accent-blue/30 bg-accent-blue/5 p-5 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-3 opacity-10"><Info size={40} /></div>
-                  <div 
-                    className="flex justify-between items-center cursor-pointer relative z-10"
-                    onClick={() => setShowSource(!showSource)}
-                  >
-                    <p className="font-sans text-xs tracking-widest uppercase text-accent-blue font-bold flex items-center gap-2">
-                      Data Provenance
-                    </p>
-                    <ChevronDown size={16} className={`text-accent-blue transition-transform duration-300 ${showSource ? 'rotate-180' : ''}`} />
-                  </div>
-                  
-                  <AnimatePresence>
-                    {showSource && (
-                      <motion.div 
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pt-4 mt-4 border-t border-accent-blue/20">
-                          <h4 className="font-serif text-lg font-bold mb-1">{currentData.sourceTitle}</h4>
-                          <p className="text-sm font-serif text-charcoal/80 mb-3">{currentData.sourceDesc}</p>
-                          {!currentData.hasData && (
-                            <div className="bg-accent-rust/10 text-accent-rust text-xs p-3 font-sans border-l-2 border-accent-rust mb-3">
-                              <strong>Note:</strong> Displayed trends represent qualitative expectations based on known microbiological spaceflight phenomena, not direct measurements.
-                            </div>
-                          )}
-                          {currentData.hasData && currentData.link && (
-                            <a href={currentData.link} target="_blank" rel="noopener noreferrer" className="text-xs font-sans uppercase tracking-widest text-accent-blue hover:underline flex items-center gap-1">
-                              View Source <ChevronRight size={12} />
-                            </a>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                <div className="border-hand p-5 bg-white/50">
-                  <p className="font-sans text-xs tracking-widest uppercase text-muted-grey font-bold mb-4 border-b border-graphite/10 pb-2">Mechanism</p>
-                  <div className="flex flex-col gap-3 relative">
-                    <div className="absolute left-[11px] top-4 bottom-4 w-px bg-graphite/20 z-0" />
-                    
-                    {[
-                      { l: 'Microgravity', i: <Globe2 size={12}/> },
-                      { l: 'Altered Fluid Dynamics', i: <ArrowDown size={12}/> },
-                      { l: 'Reduced Nutrient Transport', i: <Beaker size={12}/> },
-                      { l: 'Stress Response (RpoS / Hfq)', i: <Dna size={12}/> },
-                      { l: 'Phenotypic Shift', i: <Activity size={12}/> }
-                    ].map((st, i) => (
-                      <div key={i} className="flex items-center gap-4 relative z-10">
-                        <div className="w-6 h-6 rounded-full bg-paper border border-graphite/30 flex items-center justify-center text-graphite">
-                          {st.i}
-                        </div>
-                        <span className="font-serif text-sm text-charcoal">{st.l}</span>
+            {/* 3. MECHANISM */}
+            <div>
+              <p className="font-sans text-[10px] tracking-widest uppercase text-graphite font-bold mb-6 border-b border-graphite/20 pb-2">Mechanism</p>
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0 relative my-6">
+                <div className="hidden md:block absolute top-1/2 left-4 right-4 h-px bg-graphite/20 -z-10" />
+                {currentData.mechanism.map((step, idx) => {
+                  const IconCmp = ICONS[step.icon] || Globe2;
+                  return (
+                    <div key={idx} className="flex flex-col items-center text-center bg-paper px-2 py-1 z-10 w-32">
+                      <div className="w-10 h-10 rounded-full border border-graphite/20 flex items-center justify-center bg-white mb-3">
+                        <IconCmp size={16} strokeWidth={1.5} className="text-graphite" />
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="font-sans text-xs tracking-widest uppercase text-muted-grey font-bold mb-4">Key Observations</p>
-                  <ul className="flex flex-col gap-3">
-                    {currentData.findings.map((finding: string, i: number) => (
-                      <li key={i} className="font-serif text-charcoal text-sm md:text-base pl-4 relative">
-                        <span className="absolute left-0 top-2 w-1.5 h-1.5 bg-accent-rust rounded-full" />
-                        {finding}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-              </div>
-
-              <div className="lg:w-2/3 flex flex-col gap-8 md:gap-12">
-                
-                <div>
-                  <p className="font-sans text-xs tracking-widest uppercase text-muted-grey font-bold mb-6 border-b border-graphite/20 pb-2">Quantitative Metrics</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <MetricComparison title="Final Growth Density" earth={currentData.earth.growth} micro={currentData.micro.growth} />
-                    <MetricComparison title="Stress Response Indicators" earth={currentData.earth.stress} micro={currentData.micro.stress} />
-                    <MetricComparison title="Biofilm / Matrix Formation" earth={currentData.earth.biofilm} micro={currentData.micro.biofilm} />
-                    {antibiotic !== 'none' && (
-                      <MetricComparison title="Antibiotic Survival Rate" earth={currentData.earth.survival} micro={currentData.micro.survival} highlight />
-                    )}
-                  </div>
-                </div>
-
-                <div className="border-hand p-6 bg-white/60">
-                  <p className="font-sans text-[10px] tracking-widest uppercase text-muted-grey font-bold mb-6">Relative Growth Kinetics (Time →)</p>
-                  <div className="relative h-48 w-full border-l border-b border-graphite/20">
-                    <SimpleLineChart earthData={currentData.growthCurve.earth} microData={currentData.growthCurve.micro} />
-                    
-                    <div className="absolute top-2 left-4 flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-0.5 bg-graphite/50" />
-                        <span className="font-sans text-[10px] uppercase text-graphite/60 tracking-wider">Earth 1×g</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-1 bg-accent-blue" />
-                        <span className="font-sans text-[10px] uppercase text-accent-blue font-bold tracking-wider">Microgravity</span>
-                      </div>
+                      <span className="font-sans text-[9px] uppercase tracking-widest text-charcoal/80 leading-relaxed">{step.label}</span>
                     </div>
-                  </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 4. OBSERVATIONAL METRICS */}
+            <div>
+              <p className="font-sans text-[10px] tracking-widest uppercase text-graphite font-bold mb-6 border-b border-graphite/20 pb-2">Observational Metrics (Earth vs Microgravity)</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+                
+                {/* Metric Bars */}
+                <div className="flex flex-col gap-6 justify-center">
+                  {currentData.metrics.map(m => (
+                    <MetricComparison key={m.id} title={m.label} earth={m.earth} micro={m.micro} highlight={m.highlight} />
+                  ))}
+                  
+                  {!currentData.hasData && (
+                    <div className="flex items-start gap-3 mt-4 text-accent-rust">
+                      <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                      <p className="font-sans text-[9px] uppercase tracking-widest leading-relaxed">
+                        Notice: Metrics represent inferred physiological models rather than direct measurements for this specific combination.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                {!currentData.hasData && (
-                  <div className="flex items-start gap-3 p-4 border border-accent-rust/30 bg-accent-rust/5 text-accent-rust">
-                    <AlertTriangle size={20} className="shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-sans text-xs uppercase font-bold tracking-widest mb-1">Scientific Integrity Notice</p>
-                      <p className="font-serif text-sm opacity-90">
-                        Because no direct peer-reviewed spaceflight data exists for this specific bacterium-antibiotic combination, the simulation infers the response based on generic bacterial physiological adaptations to microgravity.
-                      </p>
+                {/* Growth Curve */}
+                {currentData.growthCurve && (
+                  <div className="border-hand p-6 bg-white/40">
+                    <p className="font-sans text-[9px] tracking-widest uppercase text-muted-grey mb-4">Relative Growth Kinetics (Time →)</p>
+                    <div className="relative h-40 w-full border-l border-b border-graphite/20">
+                      <SimpleLineChart earthData={currentData.growthCurve.earth} microData={currentData.growthCurve.micro} />
+                      
+                      {/* Legend */}
+                      <div className="absolute top-2 left-4 flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-px bg-graphite/60" />
+                          <span className="font-sans text-[9px] uppercase text-graphite/70 tracking-widest">1×g Earth</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-0.5 bg-graphite" />
+                          <span className="font-sans text-[9px] uppercase text-graphite font-bold tracking-widest">Microgravity</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
-
               </div>
             </div>
+
+            {/* 5. KEY OBSERVATIONS */}
+            <div className="mt-4">
+              <p className="font-sans text-[10px] tracking-widest uppercase text-graphite font-bold mb-6 border-b border-graphite/20 pb-2">Key Observations</p>
+              <div className="flex flex-col gap-6">
+                {currentData.observations.map((obs) => (
+                  <div key={obs.id} className="flex flex-col md:flex-row gap-2 md:gap-6 items-start">
+                    <span className="font-sans text-[10px] font-bold tracking-widest uppercase text-graphite/50 shrink-0 mt-1">{obs.id} — {obs.title}</span>
+                    <p className="font-serif text-charcoal/90 text-[15px] leading-relaxed">{obs.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 6. DATA & SOURCES */}
+            <div className="mt-8 pt-8 border-t border-graphite/10 text-center">
+              {currentData.link ? (
+                <a href={currentData.link} target="_blank" rel="noopener noreferrer" className="font-sans text-[9px] uppercase tracking-widest text-muted-grey hover:text-graphite transition-colors">
+                  Data & Experiment Source: {currentData.sourceTitle}
+                </a>
+              ) : (
+                <span className="font-sans text-[9px] uppercase tracking-widest text-muted-grey opacity-60">
+                  Data Source: {currentData.sourceTitle}
+                </span>
+              )}
+            </div>
+
           </motion.div>
         )}
       </AnimatePresence>
@@ -440,32 +442,34 @@ export default function MicrogravitySimulation() {
   );
 }
 
+// Minimal Subcomponents
+
 function MetricComparison({ title, earth, micro, highlight = false }: { title: string, earth: number, micro: number, highlight?: boolean }) {
   return (
     <div>
-      <p className="font-serif text-sm mb-3 text-graphite font-medium">{title}</p>
+      <p className="font-serif text-[15px] mb-2 text-graphite">{title}</p>
       
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-3">
-          <span className="font-sans text-[10px] uppercase tracking-widest text-graphite/60 w-12 shrink-0">Earth</span>
-          <div className="flex-grow h-4 bg-graphite/10 relative overflow-hidden border border-graphite/20">
+          <span className="font-sans text-[9px] uppercase tracking-widest text-graphite/50 w-10 shrink-0">1×g</span>
+          <div className="flex-grow h-1.5 bg-graphite/5 relative overflow-hidden">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${earth}%` }}
               transition={{ duration: 1, delay: 0.2, ease: smoothEase }}
-              className="absolute top-0 left-0 h-full bg-graphite/40"
+              className="absolute top-0 left-0 h-full bg-graphite/30"
             />
           </div>
         </div>
         
         <div className="flex items-center gap-3">
-          <span className="font-sans text-[10px] uppercase tracking-widest text-accent-blue w-12 shrink-0 font-bold">Micro</span>
-          <div className="flex-grow h-4 bg-accent-blue/10 relative overflow-hidden border border-accent-blue/30 shadow-sm">
+          <span className="font-sans text-[9px] uppercase tracking-widest text-graphite w-10 shrink-0 font-bold">Micro</span>
+          <div className="flex-grow h-1.5 bg-graphite/10 relative overflow-hidden">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${micro}%` }}
               transition={{ duration: 1.2, delay: 0.4, ease: smoothEase }}
-              className={`absolute top-0 left-0 h-full ${highlight ? 'bg-accent-rust' : 'bg-accent-blue'}`}
+              className={`absolute top-0 left-0 h-full ${highlight ? 'bg-graphite' : 'bg-graphite/70'}`}
             />
           </div>
         </div>
@@ -494,7 +498,7 @@ function SimpleLineChart({ earthData, microData }: { earthData: number[], microD
         points={earthPoints}
         fill="none"
         stroke="rgba(84, 91, 98, 0.4)"
-        strokeWidth="1.5"
+        strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
         initial={{ pathLength: 0 }}
@@ -504,8 +508,8 @@ function SimpleLineChart({ earthData, microData }: { earthData: number[], microD
       <motion.polyline 
         points={microPoints}
         fill="none"
-        stroke="#6D8BA6"
-        strokeWidth="3"
+        stroke="#545b62" 
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
         initial={{ pathLength: 0 }}
@@ -523,7 +527,7 @@ function SimpleLineChart({ earthData, microData }: { earthData: number[], microD
             cy={y} 
             r="1.5" 
             fill="#F4F1ED" 
-            stroke="#6D8BA6" 
+            stroke="#545b62" 
             strokeWidth="1"
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
